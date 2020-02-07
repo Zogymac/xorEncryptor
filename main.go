@@ -30,6 +30,7 @@ type xorReader struct {
 func (x *xorReader) Read(b []byte) (int, error) {
 	n, e := x.r.Read(b)
 	//TODO(decrypt) b
+	xor(b, x.key)
 	return n, e
 }
 
@@ -40,6 +41,7 @@ type xorWriter struct {
 
 func (x *xorWriter) Write(b []byte) (int, error) {
 	// TODO(encrypt) b
+	xor(b, x.key)
 	return x.w.Write(b)
 }
 
@@ -66,6 +68,18 @@ func main() {
 
 	keyByte := (*key)[0]
 
+	if *output != "" {
+		f, err := os.Create(*output)
+		defer f.Close()
+		checkError(err)
+		o = f
+	}
+	if *input != "" {
+		f, err := os.Open(*input)
+		defer f.Close()
+		checkError(err)
+		i = f
+	}
 	if *encrypt {
 		w := xorWriter{keyByte, o}
 		b, err := ioutil.ReadAll(i)
